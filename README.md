@@ -1,12 +1,13 @@
 # Europeanaharvest
 Metadata and object harvester using the Europeana Search API
 
-##TO DO
+## TO DO
 - bug: script now skips objects with MIME Type Image/jpeg;utf-8, because mimetypeguess guesses None
 - feature: split JSON dump into more than 1 JSON file to avoid getting humongous JSON files
 - feature: download HasView objects if they are available, with same europeana id but with added `-1`
 - bug: Europeana API sometimes returns cursor value error. Can this be fixed by urlencoding the cursor value in some way?
 - bug: script exits when handling exceptions. Make sure script passes in the while loop when excepting.
+- feature: create a dict that keeps all the different rights statements attached to objects, and counts the amount of objects downloaded with those rights statements. Show these rights statements and their counts when the script finishes, with a disclaimer urging the user to adhere to attribution and copyright policies. 
 
 ## Description
 This harvester was initially created for the V4Design project. It is written in Python 3.6. and uses a few modules. It relies mostly on the Requests module (http://docs.python-requests.org/en/master/)
