@@ -11,6 +11,7 @@ import json
 import os
 from mimetypes import guess_extension
 from time import sleep
+from urllib import parse
 
 #query parameters
 apikey = input('enter your API key (you can get it at pro.europeana.eu/get-api ): \n')
@@ -25,7 +26,7 @@ profile= 'rich'
 reusability=input("enter reusability: \n")
 start=500
 skippedrecords=0
-
+reusabilitycount={}
 
 #list of allowed exts
 allowed_exts = [".jpg", "jpeg", ".jpe", ".gif", ".tiff", ".pdf", ".txt", ".mp3",".doc",".docx",".odt",".png",".mpeg",".mpg",".mp4",".wmv"]
@@ -56,7 +57,7 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
             #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download/"+filename
+            imgdir = str(today)+"-download1/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)
             #create image in our image directory
             with open(imgdir, 'wb') as file:
@@ -77,7 +78,7 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
             #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download/"+filename
+            imgdir = str(today)+"-download1/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)
             #create file in directory
             with open(imgdir, 'wb') as file:
@@ -97,7 +98,7 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
         #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download/"+filename
+            imgdir = str(today)+"-download1/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)            #create file in directory
             with open(imgdir, 'wb') as file:
                 #write content to file
@@ -133,8 +134,9 @@ with open(filename, 'w') as outfile:
                 if records !=0:
                     print("total results: ",records,"\n")
                     print("downloading images and writing JSON of ",fetchedrecords+1,"-",fetchedrecords+rows+1)
+                    #get nextCursor value to feed back into the next API call. urlencode the value using the urllib parse module
+                    cursor = parse.quote_plus(data["nextCursor"])
                     #write metadata to json file
-                    cursor = data["nextCursor"]
                     json.dump(data["items"], outfile)
                     print ("wrote json to file.")
                     #add the amount of records to fetchedrecords
@@ -152,17 +154,24 @@ with open(filename, 'w') as outfile:
                                 #call 'download' function to download the edmIsShownBy
                                 if imgr.status_code == 200:
                                     download(imgr, fname)
+                                    #get rights statement of the item, add it to the rights statements directory
+                                    if data['items'][i]['rights'][0] in reusabilitycount:
+                                        reusabilitycount[data['items'][i]['rights'][0]]+=1
+                                    else:
+                                        reusabilitycount[data['items'][i]['rights'][0]]=1
                                 elif imgr.status_code == 429:
                                     download(imgr, fname)
+                                    #get rights statement of the item, add it to the rights statements directory
+                                    if data['items'][i]['rights'][0] in reusabilitycount:
+                                        reusabilitycount[data['items'][i]['rights'][0]]+=1
+                                    else:
+                                        reusabilitycount[data['items'][i]['rights'][0]]=1
+                                        #this is unfinished: if status code is 429, you should try to download anyway. If you can't download, print this error. Now it calls the download function anyway and also shows this message, regardless of if it downloaded or not. future feature: if the download function fails, reqeue these images
                                     print("HTTP error 429, retry after: ", imgr.headers['Retry-After'], " seconds")
                                 else:
                                     print ("image status: ",imgr.status_code)
                                     skippedrecords+=1
                             #handle exceptions by printing the exception, adding one to skippedrecords, and moving on
-                            #except requests.exceptions.Timeout:
-                            #    sleep(1)
-                            #    print("sleeping because of Timeout")
-                            #    pass
                             except requests.exceptions.RequestException as e:
                                 print (e)
                                 skippedrecords+=1
@@ -176,8 +185,20 @@ with open(filename, 'w') as outfile:
                                 #call 'download' function to download the edmObject
                                 if imgr.status_code == 200:
                                     download(imgr, fname)
+                                    #get rights statement of the item, add it to the rights statements directory
+                                    if data['items'][i]['rights'][0] in reusabilitycount:
+                                        reusabilitycount[data['items'][i]['rights'][0]]+=1
+                                    else:
+                                        reusabilitycount[data['items'][i]['rights'][0]]=1
+
                                 elif imgr.status_code == 429:
                                     download(imgr, fname)
+                                    #get rights statement of the item, add it to the rights statements directory
+                                    if data['items'][i]['rights'][0] in reusabilitycount:
+                                        reusabilitycount[data['items'][i]['rights'][0]]+=1
+                                    else:
+                                        reusabilitycount[data['items'][i]['rights'][0]]=1
+                                    #this is unfinished: if status code is 429, you should try to download anyway. If you can't download, print this error. Now it calls the download function anyway and also shows this message, regardless of if it downloaded or not. future feature: if the download function fails, reqeue these images
                                     print("HTTP error 429, retry after: ", imgr.headers['Retry-After'], " seconds")
                                 else:
                                     print ("image status: ",imgr.status_code)
@@ -201,4 +222,17 @@ with open(filename, 'w') as outfile:
         else:
             print ("request returned an error, code: ",r.status_code)
             pass
-    print ("amount of non-downloaded records: ", skippedrecords, "\n Amount of downloaded records: ", fetchedrecords)
+    print ("Total amount of records with downloaded metadata: ",fetchedrecords,"\nAmount of non-downloaded records: ", skippedrecords, "\nAmount of downloaded records: ", fetchedrecords-skippedrecords)
+    print ("\n\n Please be aware that, depending on which reusability filter you chose, you may have to make sure you correctly attribute objects when reusing them, follow the guidelines for reuse set out by the copyright statements attached to the objects, or make sure you do not reuse the object at all if that is explicitly stated.\n")
+    if reusability == "open":
+        print ("You've chosen an open reusability filter. This means all of the objects that you have downloaded are free to re-use. You might still have to attribute the owner of the object if the object's rights statement is CC BY or CC BY-SA. You must redistribute any new content you create with objects with a CC BY-SA rights statement with a Creative Commons license as well. For more information, please visit rightsstatements.org and creativecommons.org\n")
+        print("the rights statements attached to the objects you've downloaded are: ", reusabilitycount)
+    elif reusability == "restricted":
+        print ("You've chosen a restricted reusability filter. This means that, at the very least, correct attribution is needed when you reuse the objects you've downloaded, as well as compliance to the restrictions on reuse of those objects. Some objects might have a non-derivative clause attached to them (CC BY NC-ND, CC BY-ND, CC OOC-NC). Other objects might expressly state they cannot be used for commercial purposes (CC BY-NC, CC BY-NC-SA, NoC-NC,...) For more information, please visit rightsstatements.org and creativecommons.org")
+        print("the rights statements attached to the objects you've downloaded are: ", reusabilitycount)
+    elif reusability == "permission":
+        print ("You've chosen a 'permission needed' reusability filter. This means the objects cannot be reused when express permission has not been given by the copyright holder of the object (Rs InC). It is also possible that the copyright of objects in this category is unkown (Unknown), not evaluated (RS CNE), or the object is an EU orphan work (RS InC-OW-EU). For more information, please visit rightsstatements.org and creativecommons.org")
+        print("the rights statements attached to the objects you've downloaded are: ", reusabilitycount)
+    else:
+        print("you were not supposed to enter the reusability filter you entered, and for some reason this error wasn't caught by our input checker. weird. Anyway. Did you know a group of ferrets is referred to as a business? You seemed to have weaseled your way into a place that is none of your business.")
+        print("the rights statements attached to the objects you've downloaded are: ", reusabilitycount)
