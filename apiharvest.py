@@ -235,7 +235,7 @@ with open(filename, 'w') as outfile:
         else:
             print ("request returned an error, code: ",r.status_code)
             pass
-    print ("Total amount of records with downloaded metadata: ",vars.fetchedrecords,"\nAmount of non-downloaded records: ", skippedrecords, "\nAmount of downloaded records: ", vars.fetchedrecords-skippedrecords)
+    print ("Total amount of records with downloaded metadata: ",skippedrecords+vars.fetchedrecords,"\nAmount of non-downloaded objects: ", skippedrecords, "\nAmount of downloaded objects: ", vars.fetchedrecords)
     print ("\n\n Please be aware that, depending on which reusability filter you chose, you may have to make sure you correctly attribute objects when reusing them, follow the guidelines for reuse set out by the copyright statements attached to the objects, or make sure you do not reuse the object at all if that is explicitly stated.\n")
     if reusability == "open":
         print ("You've chosen an open reusability filter. This means all of the objects that you have downloaded are free to re-use. You might still have to attribute the owner of the object if the object's rights statement is CC BY or CC BY-SA. You must redistribute any new content you create with objects with a CC BY-SA rights statement with a Creative Commons license as well. For more information, please visit rightsstatements.org and creativecommons.org\n")
