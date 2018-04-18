@@ -17,7 +17,10 @@ from urllib import parse
 apikey = input('enter your API key (you can get it at pro.europeana.eu/get-api ): \n')
 query = input('enter your query:  \n')
 
-fetchedrecords=0
+class vars:
+    fetchedrecords=0
+
+rowcount=0
 rows=100
 records=''
 limit=int(input("maximum amount of records to fetch:  \n"))
@@ -57,7 +60,7 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
             #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download1/"+filename
+            imgdir = str(today)+"-download/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)
             #create image in our image directory
             with open(imgdir, 'wb') as file:
@@ -65,6 +68,8 @@ def download(url, fname):
                 print("directory: ",file)
                 file.write(url.content)
                 print("written to directory!\n")
+                #add 1 to fetchedrecords
+                vars.fetchedrecords+=1
         else:
             print ("file extension not allowed: ", fileext)
             pass
@@ -78,7 +83,7 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
             #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download1/"+filename
+            imgdir = str(today)+"-download/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)
             #create file in directory
             with open(imgdir, 'wb') as file:
@@ -86,6 +91,8 @@ def download(url, fname):
                 print("directory: ",file)
                 file.write(url.content)
                 print("written to directory!\n")
+                #add 1 to fetchedrecords
+                vars.fetchedrecords+=1
         else:
             print ("file extension not allowed: ", fileext)
             pass
@@ -98,14 +105,15 @@ def download(url, fname):
             filename = fname+fileext
             print ("filename: ",filename)
         #check if directory already exists, if not create directory. create file in correct directory. This will create folders per dataset
-            imgdir = str(today)+"-download1/"+filename
+            imgdir = str(today)+"-download/"+filename
             os.makedirs(os.path.dirname(imgdir), exist_ok=True)            #create file in directory
             with open(imgdir, 'wb') as file:
                 #write content to file
                 print("directory: ",file)
                 file.write(url.content)
                 print("written to directory!\n")
-
+                #add 1 to fetchedrecords
+                vars.fetchedrecords+=1
         else:
             print ("file extension not allowed: ", fileext)
             pass
@@ -116,7 +124,8 @@ def download(url, fname):
 #make the request
 print ("Making request for query: ", query)
 with open(filename, 'w') as outfile:
-    while records=='' or (records!=0 and fetchedrecords<=records and fetchedrecords<=limit) and cursor !='':
+    #when we are just starting (records='') OR we have downloaded records but not all (fetchedrecords is smaller than records) AND we haven't reached our record limit (fetchedrecords is smaller than limit) AND our cursor value is not empty (cursor is not '')
+    while records=='' or (records!=0 and vars.fetchedrecords<=records and vars.fetchedrecords<=limit) and cursor !='':
         r=requests.get("https://www.europeana.eu/api/v2/search.json?wskey="+apikey+"&query="+query+"&rows="+str(rows)+"&profile="+profile+"&cursor="+cursor+"&reusability="+reusability)
     #return request status
         print ("request status: ", r.status_code)
@@ -133,14 +142,18 @@ with open(filename, 'w') as outfile:
                 #if the search returned hits
                 if records !=0:
                     print("total results: ",records,"\n")
-                    print("downloading images and writing JSON of ",fetchedrecords+1,"-",fetchedrecords+rows+1)
+                    print("downloading images and writing JSON of ",rowcount+1,"-",rowcount+rows+1)
                     #get nextCursor value to feed back into the next API call. urlencode the value using the urllib parse module
-                    cursor = parse.quote_plus(data["nextCursor"])
+                    try:
+                         cursor = parse.quote_plus(data["nextCursor"])
+                    except KeyError:
+                         print(KeyError())
+                         break
                     #write metadata to json file
                     json.dump(data["items"], outfile)
                     print ("wrote json to file.")
                     #add the amount of records to fetchedrecords
-                    fetchedrecords+=rows
+                    rowcount+=rows
                     #for every record in this API call
                     for i in range(data["itemsCount"]):
                         #check if the record has an isshownby
@@ -222,7 +235,7 @@ with open(filename, 'w') as outfile:
         else:
             print ("request returned an error, code: ",r.status_code)
             pass
-    print ("Total amount of records with downloaded metadata: ",fetchedrecords,"\nAmount of non-downloaded records: ", skippedrecords, "\nAmount of downloaded records: ", fetchedrecords-skippedrecords)
+    print ("Total amount of records with downloaded metadata: ",vars.fetchedrecords,"\nAmount of non-downloaded records: ", skippedrecords, "\nAmount of downloaded records: ", vars.fetchedrecords-skippedrecords)
     print ("\n\n Please be aware that, depending on which reusability filter you chose, you may have to make sure you correctly attribute objects when reusing them, follow the guidelines for reuse set out by the copyright statements attached to the objects, or make sure you do not reuse the object at all if that is explicitly stated.\n")
     if reusability == "open":
         print ("You've chosen an open reusability filter. This means all of the objects that you have downloaded are free to re-use. You might still have to attribute the owner of the object if the object's rights statement is CC BY or CC BY-SA. You must redistribute any new content you create with objects with a CC BY-SA rights statement with a Creative Commons license as well. For more information, please visit rightsstatements.org and creativecommons.org\n")
