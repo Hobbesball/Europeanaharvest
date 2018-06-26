@@ -5,6 +5,7 @@
 #Secondly, this script also download all files that are in the allowed list of extensions and are referenced in the edm:IsShownBy or the edm:Object fields of the records.
 
 # import stuff
+import getpass
 import requests
 from datetime import date
 import json
@@ -14,7 +15,7 @@ from time import sleep
 from urllib import parse
 
 #query parameters
-apikey = input('enter your API key (you can get it at pro.europeana.eu/get-api ): \n')
+apikey = getpass.getpass('enter your API key (you can get it at pro.europeana.eu/get-api ): \n')
 query = input('enter your query:  \n')
 
 class vars:
