@@ -8,7 +8,7 @@ Metadata and object harvester using the Europeana Search API
 - feature: split JSON dump into more than 1 JSON file to avoid getting humongous JSON files
 - feature: download HasView objects if they are available, with same europeana id but with added `-1`
 - feature: start input checking
-- feature: create a dict that keeps all the different rights statements attached to objects, and counts the amount of objects downloaded with those rights statements. Show these rights statements and their counts when the script finishes, with a disclaimer urging the user to adhere to attribution and copyright policies.
+- feature: create error logs
 
 ## Description
 This harvester was initially created for the V4Design project. It is written in Python 3.6. and uses a few modules. It relies mostly on the Requests module (http://docs.python-requests.org/en/master/)
@@ -33,3 +33,6 @@ The requests module will send these headers to the websites it is requesting fil
 'User-Agent': 'Europeana data and metadata harvester v1.0',
 'From' : 'jolan.wuyts[at]europeana.eu'
 }
+The script handles server-side errors fairly well, trying not to overload data providers' servers by making too many calls. When encountering download issues, the script will print these errors in the command line. It does not create error logs as of yet. 
+
+When choosing a reusability filter, the script will only return and try to download objects that fall into that reusability category. If you don't enter a reusability filter, the script will return and download objects with any type of rights statement. At the end of the script a tally is made of how many objects were downloaded with which rights statement, and will display information on how to reuse the objects you downloaded correctly. Reusing objects correctly is the responsibility of the user, all necessary rights statement information has been given to ensure that the user is informed of what and how to reuse the downloaded objects.
