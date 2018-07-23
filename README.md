@@ -5,6 +5,7 @@ Metadata and object harvester using the Europeana Search API
 - bug: script now skips objects with MIME Type Image/jpeg;utf-8, because mimetypeguess guesses None
 - bug: script exits when handling exceptions. Make sure script passes in the while loop when excepting.
 - bug: maximum amount of records to fetch only checks after every API call, which means the minimum amount of records fetched now is 100, and incerements by 100. 
+- feature: instead of using json.dump, download metadata 1 item at a time and don't download metadata objects of which the object file cannot be downloaded.
 - feature: split JSON dump into more than 1 JSON file to avoid getting humongous JSON files
 - feature: download HasView objects if they are available, with same europeana id but with added `-1`
 - feature: start input checking
