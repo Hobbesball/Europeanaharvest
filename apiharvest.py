@@ -125,7 +125,7 @@ with open(filename, 'w') as outfile:
     while records=='' or (records!=0 and vars.fetchedrecords<=records and vars.fetchedrecords<=limit) and cursor !='':
         r=requests.get("https://www.europeana.eu/api/v2/search.json?wskey="+apikey+"&query="+query+"&rows="+str(rows)+"&profile="+profile+"&cursor="+cursor+"&reusability="+reusability)
     #return request status
-        print ("request status: ", r.status_code)
+        print ("request status for url: https://www.europeana.eu/api/v2/search.json?wskey="+apikey+"&query="+query+"&rows="+str(rows)+"&profile="+profile+"&cursor="+cursor+"&reusability="+reusability+"\n\n", r.status_code)
     #if JSON request succeeds
         if r.raise_for_status() == None:
             #get JSON data
@@ -140,12 +140,12 @@ with open(filename, 'w') as outfile:
                 if records !=0:
                     print("total results: ",records,"\n")
                     print("downloading images and writing JSON of ",rowcount+1,"-",rowcount+rows+1)
+                    print("\n current cursor value: ", cursor)
                     #get nextCursor value to feed back into the next API call. urlencode the value using the urllib parse module
                     try:
                          cursor = parse.quote_plus(data["nextCursor"])
                     except KeyError:
                          print(KeyError())
-                         break
                     #write metadata to json file
                     json.dump(data["items"], outfile)
                     print ("wrote json to file.")

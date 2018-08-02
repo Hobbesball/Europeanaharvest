@@ -10,6 +10,7 @@ Metadata and object harvester using the Europeana Search API
 - feature: split JSON dump into more than 1 JSON file to avoid getting humongous JSON files
 - feature: start input checking
 - feature: create error logs
+- feature: print cursor value when making a new call, so if the script crashes you can restart at that cursor value.
 
 ## Description
 This harvester was initially created for the V4Design project. It is written in Python 3.6. and uses a few modules. It relies mostly on the Requests module (http://docs.python-requests.org/en/master/)
