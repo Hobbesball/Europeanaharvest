@@ -50,6 +50,25 @@ filename = str(today)+".json"
 
 #create a function to download image and text file_put_contents
 def download(url, fname):
+    #get the datasetname and the filename to make a request to the record API to capture possible HasViews
+    datasetname = fname.split("/")[1]
+    itemid = fname.split("/")[2]
+    #call the record API to check for HasViews of the record
+    recordr=requests.get("https://www.europeana.eu/api/v2/record/"+datasetname+"/"+itemid+".json?profile="+profile+"&wskey="+apikey)
+    if recordr.raise_for_status() == None:
+        #check if request is successful
+        print("Record API request was successful")
+        recorddata=recordr.json()
+        #check if response is successful
+        if recorddata["success"] == True:
+            if "hasView" in recorddata["object"]["aggregations"][0]:
+                for i in recorddata["object"]["aggregations"][0]["hasView"]:
+                    #download it, attaching a number iterator to the end of the filename
+        else:
+            print("record API response returned False.")
+    else:
+        print ("record API request returned an error, code: ",recordr.status_code)
+    print("dataset: ",datasetname," |item id: ", itemid)
     #check if url contains an image
     if 'image' in url.headers['content-type'].lower():
         print("This is an image! image type: ", url.headers['content-type'])
@@ -159,7 +178,7 @@ with open(filename, 'w') as outfile:
                     for i in range(data["itemsCount"]):
                         #check if the record has an isshownby
                         if 'edmIsShownBy' in data['items'][i]:
-                            #get the HTTP link to the image
+                            # make a request to the record API with the dataset and item name to check if there are hasviews as well
                             imgurl = data['items'][i]['edmIsShownBy'][0]
                             fname = data['items'][i]['id']
                             print ('fname: ',fname)
