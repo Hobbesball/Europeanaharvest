@@ -50,25 +50,6 @@ filename = str(today)+".json"
 
 #create a function to download image and text file_put_contents
 def download(url, fname):
-    #get the datasetname and the filename to make a request to the record API to capture possible HasViews
-    datasetname = fname.split("/")[1]
-    itemid = fname.split("/")[2]
-    #call the record API to check for HasViews of the record
-    recordr=requests.get("https://www.europeana.eu/api/v2/record/"+datasetname+"/"+itemid+".json?profile="+profile+"&wskey="+apikey)
-    if recordr.raise_for_status() == None:
-        #check if request is successful
-        print("Record API request was successful")
-        recorddata=recordr.json()
-        #check if response is successful
-        if recorddata["success"] == True:
-            if "hasView" in recorddata["object"]["aggregations"][0]:
-                for i in recorddata["object"]["aggregations"][0]["hasView"]:
-                    #download it, attaching a number iterator to the end of the filename
-        else:
-            print("record API response returned False.")
-    else:
-        print ("record API request returned an error, code: ",recordr.status_code)
-    print("dataset: ",datasetname," |item id: ", itemid)
     #check if url contains an image
     if 'image' in url.headers['content-type'].lower():
         print("This is an image! image type: ", url.headers['content-type'])
@@ -88,8 +69,6 @@ def download(url, fname):
                 print("directory: ",file)
                 file.write(url.content)
                 print("written to directory!\n")
-                #add 1 to fetchedrecords
-                vars.fetchedrecords+=1
         else:
             print ("file extension not allowed: ", fileext)
             pass
@@ -111,8 +90,6 @@ def download(url, fname):
                 print("directory: ",file)
                 file.write(url.content)
                 print("written to directory!\n")
-                #add 1 to fetchedrecords
-                vars.fetchedrecords+=1
         else:
             print ("file extension not allowed: ", fileext)
             pass
@@ -187,6 +164,8 @@ with open(filename, 'w') as outfile:
                                 #call 'download' function to download the edmIsShownBy
                                 if imgr.status_code == 200:
                                     download(imgr, fname)
+                                    #add 1 to fetchedrecords
+                                    vars.fetchedrecords+=1
                                     #get rights statement of the item, add it to the rights statements directory
                                     if data['items'][i]['rights'][0] in reusabilitycount:
                                         reusabilitycount[data['items'][i]['rights'][0]]+=1
@@ -194,6 +173,8 @@ with open(filename, 'w') as outfile:
                                         reusabilitycount[data['items'][i]['rights'][0]]=1
                                 elif imgr.status_code == 429:
                                     download(imgr, fname)
+                                    #add 1 to fetchedrecords
+                                    vars.fetchedrecords+=1
                                     #get rights statement of the item, add it to the rights statements directory
                                     if data['items'][i]['rights'][0] in reusabilitycount:
                                         reusabilitycount[data['items'][i]['rights'][0]]+=1
@@ -208,7 +189,44 @@ with open(filename, 'w') as outfile:
                             except requests.exceptions.RequestException as e:
                                 print (e)
                                 skippedrecords+=1
-                                pass
+                            #get the datasetname and the filename to make a request to the record API to capture possible HasViews
+                            datasetname = fname.split("/")[1]
+                            itemid = fname.split("/")[2]
+                            #call the record API to check for HasViews of the record
+                            recordr=requests.get("https://www.europeana.eu/api/v2/record/"+datasetname+"/"+itemid+".json?profile="+profile+"&wskey="+apikey)
+                            if recordr.raise_for_status() == None:
+                                #check if request is successful
+                                print("Record API request was successful")
+                                recorddata=recordr.json()
+                                #check if response is successful
+                                if recorddata["success"] == True:
+                                    if "hasView" in recorddata["object"]["aggregations"][0]:
+                                        #start iterator at 1
+                                        hasviewadd = 1
+                                        for i in recorddata["object"]["aggregations"][0]["hasView"]:
+                                            #add iterator to fname
+                                            hasviewname = fname+"-"+str(hasviewadd)
+                                            try:
+                                                imgr = requests.get(i, allow_redirects=True, headers=headers, timeout=2)
+                                                #call 'download' function to download the hasview
+                                                if imgr.status_code == 200:
+                                                    download(imgr, hasviewname)
+                                                elif imgr.status_code == 429:
+                                                    download(imgr, hasviewname)
+                                                        #this is unfinished: if status code is 429, you should try to download anyway. If you can't download, print this error. Now it calls the download function anyway and also shows this message, regardless of if it downloaded or not. future feature: if the download function fails, reqeue these images
+                                                    print("HTTP error 429, retry after: ", imgr.headers['Retry-After'], " seconds")
+                                                else:
+                                                    print ("image status: ",imgr.status_code)
+                                            except requests.exceptions.RequestException as e:
+                                                print (e)
+                                            #increase iterator before new iteration of for loop
+                                            hasviewadd += 1
+
+                                else:
+                                    print("record API response returned False.")
+                            else:
+                                print ("record API request returned an error, code: ",recordr.status_code)
+                            print("dataset: ",datasetname," |item id: ", itemid)
                         elif 'edmObject' in data['items'][i]:
                             #get the HTTP link to the image
                             imgurl = data['items'][i]['edmObject'][0]
