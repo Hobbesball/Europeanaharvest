@@ -1,5 +1,6 @@
-# Europeanaharvest
-Metadata and object harvester using the Europeana Search API
+# Europeana Combine Harvester
+The Europeana Combine harvester takes a query and a few parameters, and downloads all of the records the Search API returns. It download metadata in JSON format, and download the actual images/text files in a separate folder. Thus, it's a combine harvester. 
+naming props go to @AdrianMurphy
 
 ## TO DO
 - bug: script now skips objects with MIME Type Image/jpeg;utf-8, because mimetypeguess guesses None
