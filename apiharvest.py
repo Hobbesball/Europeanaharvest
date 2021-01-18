@@ -24,10 +24,10 @@ class vars:
 rowcount=0
 rows=100
 records=''
-limit=int(input("maximum amount of records to fetch:  \n"))
+limit=int(input("maximum amount of records to fetch. Must be a multiple of 100, minimum 100:  \n"))
 cursor='*'
 profile= 'rich'
-reusability=input("enter reusability: \n")
+reusability=input("enter your reusability parameter. This can be either 'open', 'restricted', or 'permission'. For more info on what to use go to https://pro.europeana.eu/page/search#reusability \n")
 start=500
 skippedrecords=0
 reusabilitycount={}
