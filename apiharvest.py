@@ -15,7 +15,7 @@ from time import sleep
 from urllib import parse
 
 #query parameters
-apikey = getpass.getpass('enter your API key (you can get it at pro.europeana.eu/get-api ): \n')
+apikey = getpass.getpass("enter your API key (you can get it at pro.europeana.eu/get-api ): \n")
 query = input('enter your query:  \n')
 
 class vars:
